@@ -1,14 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration ---
-    const apiKey = 'YOUR_WEATHERAPI_KEY_HERE'; // <-- REPLACE THIS
-    const lat = 51.3616;
-    const lon = -0.1900;
-    const apiUrl = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}`;
+    const apiKey = 'YOUR_WEATHERAPI_KEY'; // <-- REPLACE THIS
+    const lat = 51.3616; // Replace these with lat and lon - N is positive, S is negative. E.g. 48.3319 deg S is -48.3319
+    const lon = -0.1900; // E is positive, W is negative. E.g. 0.7446 deg W is -0.7446
+    
+    // ** ADDED alerts=yes to the URL **
+    const apiUrl = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${lat},${lon}&alerts=yes`;
 
     // --- HTML Elements ---
     const locationNameEl = document.getElementById('location-name');
     const weatherDataEl = document.getElementById('weather-data');
     const weatherIconEl = document.getElementById('weather-icon');
+    const weatherAlertsEl = document.getElementById('weather-alerts'); // Get the new alerts div
 
     /**
      * Maps a WeatherAPI condition code to a Bas Milius animated icon name.
@@ -17,57 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {string} The filename of the SVG icon.
      */
     function getIconFileName(code, isDay) {
+        // (This function remains unchanged from the previous version)
         const iconMap = {
-            1000: isDay ? 'clear-day' : 'clear-night',
-            1003: isDay ? 'partly-cloudy-day' : 'partly-cloudy-night',
-            1006: 'cloudy',
-            1009: 'overcast',
-            1030: 'mist',
+            1000: isDay ? 'clear-day' : 'clear-night', 1003: isDay ? 'partly-cloudy-day' : 'partly-cloudy-night',
+            1006: 'cloudy', 1009: 'overcast', 1030: 'mist',
             1063: isDay ? 'partly-cloudy-day-drizzle' : 'partly-cloudy-night-drizzle',
             1066: isDay ? 'partly-cloudy-day-snow' : 'partly-cloudy-night-snow',
             1069: isDay ? 'partly-cloudy-day-sleet' : 'partly-cloudy-night-sleet',
-            1072: 'drizzle',
-            1087: 'thunderstorms',
-            1114: 'wind-snow',
-            1117: 'blizzard',
-            1135: 'fog',
-            1147: 'fog',
-            1150: 'drizzle',
-            1153: 'drizzle',
-            1168: 'drizzle',
-            1171: 'drizzle',
-            1180: 'rain',
-            1183: 'rain',
-            1186: 'rain',
-            1189: 'rain',
-            1192: 'rain',
-            1195: 'rain',
-            1198: 'sleet',
-            1201: 'sleet',
-            1204: 'sleet',
-            1207: 'sleet',
-            1210: 'snow',
-            1213: 'snow',
-            1216: 'snow',
-            1219: 'snow',
-            1222: 'snow',
-            1225: 'snow',
-            1237: 'hail',
-            1240: 'rain',
-            1243: 'rain',
-            1246: 'rain',
-            1249: 'sleet',
-            1252: 'sleet',
-            1255: 'snow',
-            1258: 'snow',
-            1261: 'hail',
-            1264: 'hail',
-            1273: 'thunderstorms-rain',
-            1276: 'thunderstorms-rain',
-            1279: 'thunderstorms-snow',
-            1282: 'thunderstorms-snow'
+            1072: 'drizzle', 1087: 'thunderstorms', 1114: 'wind-snow', 1117: 'blizzard',
+            1135: 'fog', 1147: 'fog', 1150: 'drizzle', 1153: 'drizzle', 1168: 'drizzle',
+            1171: 'drizzle', 1180: 'rain', 1183: 'rain', 1186: 'rain', 1189: 'rain',
+            1192: 'rain', 1195: 'rain', 1198: 'sleet', 1201: 'sleet', 1204: 'sleet',
+            1207: 'sleet', 1210: 'snow', 1213: 'snow', 1216: 'snow', 1219: 'snow',
+            1222: 'snow', 1225: 'snow', 1237: 'hail', 1240: 'rain', 1243: 'rain',
+            1246: 'rain', 1249: 'sleet', 1252: 'sleet', 1255: 'snow', 1258: 'snow',
+            1261: 'hail', 1264: 'hail', 1273: 'thunderstorms-rain', 1276: 'thunderstorms-rain',
+            1279: 'thunderstorms-snow', 1282: 'thunderstorms-snow'
         };
-        // Return the mapped icon name or a 'not-available' default
         return iconMap[code] || 'not-available';
     }
 
@@ -89,15 +58,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const location = data.location;
             const current = data.current;
 
-            // 1. Update location text
+            // 1. **NEW**: Check for and display alerts
+            weatherAlertsEl.innerHTML = ''; // Clear any previous alerts
+            if (data.alerts && data.alerts.alert.length > 0) {
+                data.alerts.alert.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert-item';
+                    alertDiv.innerHTML = `
+                        <h3>${alert.headline}</h3>
+                        <p><strong>Severity:</strong> ${alert.severity}</p>
+                        <p><strong>Effective:</strong> ${new Date(alert.effective).toLocaleString()}</p>
+                        <p>${alert.desc}</p>
+                    `;
+                    weatherAlertsEl.appendChild(alertDiv);
+                });
+            }
+
+            // 2. Update location text
             locationNameEl.textContent = `${location.name}, ${location.country}`;
 
-            // 2. Determine the icon
+            // 3. Determine and update the icon
             const iconFileName = getIconFileName(current.condition.code, current.is_day);
-            // We use jsDelivr to serve files directly from the GitHub repo
             const iconUrl = `https://cdn.jsdelivr.net/gh/basmilius/weather-icons@dev/production/fill/svg/${iconFileName}.svg`;
-            
-            // 3. Update icon element
             weatherIconEl.src = iconUrl;
             weatherIconEl.alt = current.condition.text;
 
