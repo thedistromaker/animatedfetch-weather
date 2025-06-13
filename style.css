@@ -44,3 +44,25 @@ h1 {
     line-height: 1.5;
     font-size: 1.1em;
 }
+
+#weather-alerts {
+    margin-bottom: 20px;
+}
+
+.alert-item {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffeeba;
+    border-radius: 5px;
+    padding: 15px;
+    font-size: 0.9em;
+}
+
+.alert-item h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #856404;
+}
+
+.alert-item p {
+    margin: 5px 0;
+}
